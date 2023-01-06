@@ -1,6 +1,8 @@
-contract Reentrancy {
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
 
-    mapping (address => uint) deposits;
+contract Reentrancy {
+    mapping(address => uint) deposits;
 
     function deposit() payable {
         deposits[msg.sender] = msg.value;
