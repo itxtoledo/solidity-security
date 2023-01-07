@@ -38,12 +38,11 @@ describe("Reentrancy", function () {
       reentrancyExplorer.address
     );
 
-    console.log("Explorer balancer", explorerBalance.toString());
+    const contractBalance = await ethers.provider.getBalance(
+      reentrancy.address
+    );
 
-    // await expect(
-    //   sarauNFT
-    //     .connect(otherAccount)
-    //     .setCode(ethers.utils.formatBytes32String(""))
-    // ).to.be.reverted;
+    console.log("Explorer balance", explorerBalance.toString());
+    console.log("Contract balance", contractBalance.toString());
   });
 });
