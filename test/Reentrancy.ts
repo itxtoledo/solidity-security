@@ -24,6 +24,17 @@ describe("Reentrancy", function () {
       deployContractsFixture
     );
 
+    const explorerBalanceBefore = await ethers.provider.getBalance(
+        reentrancyExplorer.address
+      );
+  
+      const contractBalanceBefore = await ethers.provider.getBalance(
+        reentrancy.address
+      );
+  
+      console.log("Explorer balance Before ", explorerBalanceBefore.toString());
+      console.log("Contract balance Before ", contractBalanceBefore.toString());
+
     await reentrancy
       .connect(accA)
       .deposit({ value: ethers.constants.WeiPerEther.mul(1) });
@@ -34,15 +45,15 @@ describe("Reentrancy", function () {
 
     await reentrancyExplorer.connect(accB).secondStep();
 
-    const explorerBalance = await ethers.provider.getBalance(
+    const explorerBalanceAfter = await ethers.provider.getBalance(
       reentrancyExplorer.address
     );
 
-    const contractBalance = await ethers.provider.getBalance(
+    const contractBalanceAfter = await ethers.provider.getBalance(
       reentrancy.address
     );
 
-    console.log("Explorer balance", explorerBalance.toString());
-    console.log("Contract balance", contractBalance.toString());
+    console.log("Explorer balance after ", explorerBalanceAfter.toString());
+    console.log("Contract balance after ", contractBalanceAfter.toString());
   });
 });
