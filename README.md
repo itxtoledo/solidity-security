@@ -6,7 +6,7 @@ This project aims to teach other devs ways to improve contracts security.
 npm run test
 ```
 
-## Reentrancy Attack
+## Reentrancy Attack SWC-107
 
 You can find reentracy examples in `\contracts\reentrancy`
 
