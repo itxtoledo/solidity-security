@@ -6,54 +6,66 @@ describe("Reentrancy", function () {
   async function deployContractsFixture() {
     const [accA, accB] = await ethers.getSigners();
 
-    const ReentrancyExplorerFactory = await ethers.getContractFactory(
-      "ReentrancyExplorer"
+    const ReentrancyAttackerFactory = await ethers.getContractFactory(
+      "ReentrancyAttacker"
     );
-    const ReentrancyFactory = await ethers.getContractFactory("Reentrancy");
+    const VaultFactory = await ethers.getContractFactory("Vault");
 
-    const reentrancy = await ReentrancyFactory.deploy();
-    const reentrancyExplorer = await ReentrancyExplorerFactory.deploy(
-      reentrancy.address
+    const vault = await VaultFactory.deploy();
+    const reentrancyAttacker = await ReentrancyAttackerFactory.deploy(
+      vault.address
     );
 
-    return { reentrancy, reentrancyExplorer, accA, accB };
+    return { vault, reentrancyAttacker, accA, accB };
   }
 
   it("Should explore reentrancy", async function () {
-    const { reentrancy, reentrancyExplorer, accA, accB } = await loadFixture(
+    const { vault, reentrancyAttacker, accA, accB } = await loadFixture(
       deployContractsFixture
     );
 
-    const explorerBalanceBefore = await ethers.provider.getBalance(
-        reentrancyExplorer.address
-      );
-  
-      const contractBalanceBefore = await ethers.provider.getBalance(
-        reentrancy.address
-      );
-  
-      console.log("Explorer balance Before ", explorerBalanceBefore.toString());
-      console.log("Contract balance Before ", contractBalanceBefore.toString());
+    const realDepositedAmount = ethers.constants.WeiPerEther.div(10);
 
-    await reentrancy
+    // normal user deposit
+    await vault
       .connect(accA)
       .deposit({ value: ethers.constants.WeiPerEther.mul(1) });
 
-    await reentrancyExplorer
+    const vaultBalanceBefore = await ethers.provider.getBalance(vault.address);
+
+    // attacker deposit and attack
+    await reentrancyAttacker
       .connect(accB)
-      .firstStep({ value: ethers.constants.WeiPerEther.div(100) });
+      .drain({ value: realDepositedAmount });
 
-    await reentrancyExplorer.connect(accB).secondStep();
-
-    const explorerBalanceAfter = await ethers.provider.getBalance(
-      reentrancyExplorer.address
+    const attackerBalanceAfter = await ethers.provider.getBalance(
+      reentrancyAttacker.address
     );
 
-    const contractBalanceAfter = await ethers.provider.getBalance(
-      reentrancy.address
+    const vaultBalanceAfter = await ethers.provider.getBalance(vault.address);
+
+    console.log(
+      "Vault original balance    ",
+      ethers.utils
+        .formatUnits(vaultBalanceBefore.toString(), "ether")
+        .toString()
     );
 
-    console.log("Explorer balance after ", explorerBalanceAfter.toString());
-    console.log("Contract balance after ", contractBalanceAfter.toString());
+    console.log(
+      "Vault balance after       ",
+      ethers.utils.formatUnits(vaultBalanceAfter.toString(), "ether").toString()
+    );
+
+    console.log(
+      "Attacker balance after    ",
+      ethers.utils
+        .formatUnits(attackerBalanceAfter.toString(), "ether")
+        .toString()
+    );
+
+    console.log(
+      "Exploit with success?     ",
+      attackerBalanceAfter.gt(realDepositedAmount)
+    );
   });
 });
